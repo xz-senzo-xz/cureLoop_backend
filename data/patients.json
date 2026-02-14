@@ -1,0 +1,10 @@
+[
+    {
+      "id": "patient1",
+      "name": "Ahmed Bennani",
+      "age": 45,
+      "allergies": ["penicillin"],
+      "history": "Hypertension, Type 2 Diabetes",
+      "created_at": "2025-01-15"
+    }
+  ]

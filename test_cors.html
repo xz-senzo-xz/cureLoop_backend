@@ -1,0 +1,206 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <title>CORS Test</title>
+  <style>
+    body {
+      font-family: Arial, sans-serif;
+      max-width: 800px;
+      margin: 50px auto;
+      padding: 20px;
+    }
+    .test-result {
+      padding: 15px;
+      margin: 10px 0;
+      border-radius: 5px;
+    }
+    .success {
+      background: #d4edda;
+      color: #155724;
+      border: 1px solid #c3e6cb;
+    }
+    .error {
+      background: #f8d7da;
+      color: #721c24;
+      border: 1px solid #f5c6cb;
+    }
+    button {
+      padding: 10px 20px;
+      font-size: 16px;
+      cursor: pointer;
+      background: #007bff;
+      color: white;
+      border: none;
+      border-radius: 5px;
+      margin: 5px;
+    }
+    button:hover {
+      background: #0056b3;
+    }
+    pre {
+      background: #f4f4f4;
+      padding: 10px;
+      border-radius: 5px;
+      overflow-x: auto;
+    }
+  </style>
+</head>
+<body>
+  <h1>🧪 CORS Test for Speech-to-Text API</h1>
+  
+  <p>Testing from origin: <strong id="origin"></strong></p>
+  
+  <button onclick="testHealthCheck()">Test Health Check (GET)</button>
+  <button onclick="testTranscribeChunk()">Test Transcribe Chunk (POST)</button>
+  
+  <div id="results"></div>
+  
+  <script>
+    const API_BASE = 'http://localhost:5001/api/speech';
+    
+    document.getElementById('origin').textContent = window.location.origin;
+    
+    function displayResult(title, success, message, details = null) {
+      const resultsDiv = document.getElementById('results');
+      const resultDiv = document.createElement('div');
+      resultDiv.className = `test-result ${success ? 'success' : 'error'}`;
+      
+      let html = `
+        <h3>${success ? '✅' : '❌'} ${title}</h3>
+        <p><strong>Status:</strong> ${success ? 'SUCCESS' : 'FAILED'}</p>
+        <p><strong>Message:</strong> ${message}</p>
+      `;
+      
+      if (details) {
+        html += `<pre>${JSON.stringify(details, null, 2)}</pre>`;
+      }
+      
+      resultDiv.innerHTML = html;
+      resultsDiv.insertBefore(resultDiv, resultsDiv.firstChild);
+    }
+    
+    async function testHealthCheck() {
+      try {
+        console.log('Testing health check...');
+        const response = await fetch(`${API_BASE}/health`, {
+          method: 'GET'
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          displayResult(
+            'Health Check Test',
+            true,
+            `Server is healthy! Status: ${response.status}`,
+            data
+          );
+        } else {
+          displayResult(
+            'Health Check Test',
+            false,
+            `Server returned error: ${response.status}`,
+            data
+          );
+        }
+      } catch (error) {
+        displayResult(
+          'Health Check Test',
+          false,
+          `CORS or Network Error: ${error.message}`,
+          { error: error.toString() }
+        );
+      }
+    }
+    
+    async function testTranscribeChunk() {
+      try {
+        console.log('Testing transcribe chunk...');
+        
+        // Create a simple audio blob (silence)
+        const audioContext = new (window.AudioContext || window.webkitAudioContext)();
+        const duration = 1; // 1 second
+        const sampleRate = audioContext.sampleRate;
+        const buffer = audioContext.createBuffer(1, sampleRate * duration, sampleRate);
+        
+        // Convert to WAV blob
+        const blob = await audioBufferToWav(buffer);
+        
+        const formData = new FormData();
+        formData.append('audio', blob, 'test.wav');
+        formData.append('chunk_index', '0');
+        formData.append('session_id', 'cors-test-session');
+        
+        const response = await fetch(`${API_BASE}/transcribe-chunk`, {
+          method: 'POST',
+          body: formData
+        });
+        
+        const data = await response.json();
+        
+        if (response.ok) {
+          displayResult(
+            'Transcribe Chunk Test',
+            true,
+            `CORS is working! File uploaded successfully. Status: ${response.status}`,
+            data
+          );
+        } else {
+          displayResult(
+            'Transcribe Chunk Test',
+            false,
+            `Server returned error: ${response.status} - ${data.error || 'Unknown error'}`,
+            data
+          );
+        }
+      } catch (error) {
+        displayResult(
+          'Transcribe Chunk Test',
+          false,
+          `CORS or Network Error: ${error.message}`,
+          { error: error.toString() }
+        );
+      }
+    }
+    
+    // Helper function to convert AudioBuffer to WAV blob
+    async function audioBufferToWav(buffer) {
+      const length = buffer.length * buffer.numberOfChannels * 2;
+      const arrayBuffer = new ArrayBuffer(44 + length);
+      const view = new DataView(arrayBuffer);
+      
+      // WAV header
+      writeString(view, 0, 'RIFF');
+      view.setUint32(4, 36 + length, true);
+      writeString(view, 8, 'WAVE');
+      writeString(view, 12, 'fmt ');
+      view.setUint32(16, 16, true);
+      view.setUint16(20, 1, true);
+      view.setUint16(22, buffer.numberOfChannels, true);
+      view.setUint32(24, buffer.sampleRate, true);
+      view.setUint32(28, buffer.sampleRate * buffer.numberOfChannels * 2, true);
+      view.setUint16(32, buffer.numberOfChannels * 2, true);
+      view.setUint16(34, 16, true);
+      writeString(view, 36, 'data');
+      view.setUint32(40, length, true);
+      
+      // Write audio data
+      const channelData = buffer.getChannelData(0);
+      let offset = 44;
+      for (let i = 0; i < channelData.length; i++) {
+        const sample = Math.max(-1, Math.min(1, channelData[i]));
+        view.setInt16(offset, sample < 0 ? sample * 0x8000 : sample * 0x7FFF, true);
+        offset += 2;
+      }
+      
+      return new Blob([arrayBuffer], { type: 'audio/wav' });
+    }
+    
+    function writeString(view, offset, string) {
+      for (let i = 0; i < string.length; i++) {
+        view.setUint8(offset + i, string.charCodeAt(i));
+      }
+    }
+  </script>
+</body>
+</html>

@@ -1,0 +1,11 @@
+[
+  {
+    "id": "treatment1",
+    "patient_id": "patient1",
+    "medications": [
+      {"name": "Metformin", "dosage": "500mg", "frequency": "2x/day"}
+    ],
+    "start_date": "2025-02-10",
+    "duration_days": 30
+  }
+]
