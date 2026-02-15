@@ -1,0 +1,36 @@
+Example of Structured History Output
+========================================
+
+When the API processes clinical notes, the "history" field will be formatted like this for quick doctor review:
+
+CHRONIC CONDITIONS:
+• Type 2 Diabetes - ongoing management required
+• Hypertension - under control with medication
+
+CURRENT MEDICATIONS:
+• Metformin 850mg 2x/day (365 days) - for diabetes management
+• Ciprofloxacin 500mg 2x/day (6 days) - for current UTI infection
+• Paracetamol 1g 2x/day (3 days) - pain management
+
+ALLERGIES & WARNINGS:
+• Ciprofloxacin may affect blood sugar levels in diabetic patients
+• Potential interaction: Ciprofloxacin + Metformin - monitor closely
+• Paracetamol - avoid exceeding dose to prevent liver damage
+
+RECENT MEDICAL HISTORY:
+• Current complaint: Burning urination, lower abdominal pain, fatigue
+• Previous diagnosis: Urinary tract infection (UTI)
+• Suprapubic tenderness noted, signs of dehydration
+
+RISK FLAGS:
+• Chronic condition: Type 2 Diabetes increases infection risk
+• Higher risk of infection complications
+• Blood sugar may fluctuate during antibiotic therapy
+• Monitor kidney function due to Metformin + Ciprofloxacin interaction
+
+========================================
+This format allows doctors to:
+- Scan quickly for critical information
+- Spot potential drug interactions immediately
+- Identify chronic conditions affecting treatment
+- See risk flags at a glance

@@ -1,46 +1,83 @@
-# Cureloop Backend - Quick Start
+# Cureloop Backend
 
-## Setup
+A Flask-based medical consultation platform that provides AI-powered clinical note extraction, speech-to-text transcription, treatment planning, and follow-up management for healthcare providers.
 
-1. **Install dependencies**:
+## Features
+
+- **Speech-to-Text Transcription**: Real-time medical consultation transcription with ElevenLabs integration
+- **Clinical Notes Extraction**: AI-powered extraction of structured clinical data from consultation transcripts
+- **Treatment Plan Management**: Create, track, and manage patient treatment plans
+- **Follow-up Tracking**: Schedule and monitor patient follow-up appointments
+- **Patient History Integration**: Comprehensive patient medical history management
+- **RESTful API**: Clean, documented endpoints for frontend integration
+
+## Requirements
+
+- Python 3.8+
+- SQLite (included with Python)
+- API Keys:
+  - ElevenLabs API key (for speech-to-text)
+  - Groq API key (for AI clinical note extraction)
+  - MiniMax API key (optional, for additional AI features)
+
+## Installation
+
+1. **Clone the repository**:
+```bash
+git clone <repository-url>
+cd backend
+```
+
+2. **Create a virtual environment**:
+```bash
+python -m venv .venv
+source .venv/bin/activate  # On Windows: .venv\Scripts\activate
+```
+
+3. **Install dependencies**:
 ```bash
 pip install -r requirements.txt
 ```
 
-2. **Configure environment** (`.env` file):
+4. **Configure environment variables**:
+
+Create a `.env` file in the project root:
 ```env
-ELEVENLABS_API_KEY=your_api_key_here
+ELEVENLABS_API_KEY=your_elevenlabs_api_key
+GROQ_API_KEY=your_groq_api_key
+MINIMAX_API_KEY=your_minimax_api_key
+MINIMAX_GROUP_ID=your_minimax_group_id
 FLASK_ENV=development
 FLASK_DEBUG=True
 ```
 
-3. **Run the server**:
+5. **Run the application**:
 ```bash
 python app.py
 ```
 
-Server will start at: `http://localhost:5000`
+The server will start at `http://localhost:5001`
 
 ## API Endpoints
 
-### Speech-to-Text API
-Base URL: `http://localhost:5000/api/speech`
+### Core Services
 
-- **POST** `/transcribe-chunk` - Transcribe audio chunks (for simulated real-time)
-- **POST** `/transcribe-file` - Transcribe complete audio file
-- **GET** `/health` - Health check
+- **Health Check**: `GET /api/health`
+- **Speech Transcription**: `POST /api/speech/transcribe-chunk`
+- **Clinical Notes**: `POST /api/clinical/extract-clinical-notes`
+- **Consultations**: `GET|POST /api/consultations`
+- **Treatment Plans**: `GET|POST /api/treatment-plans`
+- **Follow-ups**: `GET|POST /api/followup`
 
-📖 **Full Documentation**: See `SPEECH_TO_TEXT_API.md` for detailed API docs and frontend integration guide
-
-## Quick Test
+### Quick Test
 
 ```bash
-# Health check
-curl http://localhost:5000/api/speech/health
+# Check if server is running
+curl http://localhost:5001/api/health
 
-# Transcribe an audio file
-curl -X POST http://localhost:5000/api/speech/transcribe-chunk \
-  -F "audio=@your_audio.mp3" \
+# Test speech transcription
+curl -X POST http://localhost:5001/api/speech/transcribe-chunk \
+  -F "audio=@audio.mp3" \
   -F "chunk_index=0"
 ```
 
@@ -48,12 +85,44 @@ curl -X POST http://localhost:5000/api/speech/transcribe-chunk \
 
 ```
 backend/
-├── app.py                      # Main Flask application
-├── routes/
-│   └── speech_to_text.py      # Speech-to-text API routes
-├── data/                       # Data files
-├── requirements.txt            # Python dependencies
-├── .env                        # Environment variables
-├── README.md                   # This file
-└── SPEECH_TO_TEXT_API.md      # Complete API documentation
+├── app.py                          # Main application entry point
+├── app/
+│   ├── __init__.py                # Database initialization
+│   ├── models/
+│   │   └── models.py              # SQLAlchemy database models
+│   ├── routes/
+│   │   ├── speech_to_text.py      # Transcription API
+│   │   ├── clinical_notes_api.py  # Clinical notes extraction
+│   │   ├── consultations_api.py   # Consultation management
+│   │   ├── treatment_plans_api.py # Treatment planning
+│   │   └── followup_api.py        # Follow-up tracking
+│   ├── helpers/                   # Utility functions
+│   └── data/                      # Mock data files
+├── cureloop.db                    # SQLite database
+├── requirements.txt               # Python dependencies
+└── .env                           # Environment variables
 ```
+
+## Database
+
+The application uses SQLite for data persistence. The database is automatically created on first run with the following tables:
+
+- Patients
+- Consultations
+- Clinical Notes
+- Treatment Plans
+- Follow-ups
+
+## Development
+
+To run in development mode with auto-reload:
+
+```bash
+python app.py
+```
+
+CORS is enabled for all origins in development mode for easy frontend integration.
+
+## License
+
+Proprietary - Cureloop
